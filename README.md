@@ -83,7 +83,7 @@ This should be the entire set up for the rest of the project. In this phase, we'
 
 ---  
 
-## Data Ingestion
+## Data Extraction  
 
 
 
