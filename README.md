@@ -17,25 +17,29 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 ---
 
 
-## Set up (MAC)  
+## Setup  
 
 Install SQL Server and SSMS. If you're on a MAC like me, you'll need to install Docker Desktop for MacOS. Once you've installed this, you need to pull a SQL Server image to docker. 
 
 1. Ensure you have docker installed.  
 ```bash  
 docker --version  
+```  
 
 2. Pull the SQL Server image for Docker. (You can use another image if you'd like)  
 ```bash  
 docker pull mcr.microsoft.com/mssql/server:2022-latest  
+```  
 
 3. Run SQL Server in a Docker container  
 ```bash  
-docker run -e "ACCEPT_EULA=Y" -e "<USERNAME>_PASSWWORD=<PASSWORD>" -p 1433:1433 --name sqlserver -d mcr.microsoft.com/mssql/server:2022-latest  
+docker run -e "ACCEPT_EULA=Y" -e "<USERNAME>_PASSWWORD=<PASSWORD>" -p 1433:1433 --name sqlserver -d mcr.microsoft.com/mssql/server:2022-latest 
+```   
 
 4. Verify the container is running.  
 ```bash  
 docker ps  
+```  
 
 Download [Azure Data Studio](https://learn.microsoft.com/en-us/azure-data-studio/download-azure-data-studio?tabs=win-install%2Cwin-user-install%2Credhat-install%2Cwindows-uninstall%2Credhat-uninstall)  
 
@@ -48,6 +52,7 @@ This will download a .bak file to downloads. Move the file somewhere accessible 
 1. Copy the file to the container.  
 ```bash  
 docker cp /path/to/your/file.bak <servername>:/var/opt/mssql/data/  
+```  
 
 You can verify in the container logs that the .bak file was copied, then head to Azure Data Studio and click on "query" to run the following query.
 
@@ -55,7 +60,8 @@ You can verify in the container logs that the .bak file was copied, then head to
 RESTORE DATABASE <DATABASENAME>  
 FROM DISK = '/var/opt/mssql/data/file.bak'
 WITH MOVE '<DATABASENAME>_Data' TO '/var/opt/mssql/data/<DATABASENAME>.mdf',  
-MOVE '<DATABASENAME>_Log' TO '/var/opt/mssql/data/<DATABASENAME>_log.ldf';  
+MOVE '<DATABASENAME>_Log' TO '/var/opt/mssql/data/<DATABASENAME>_log.ldf'; 
+```   
 
 
 You should now be able to click on "Databases" and see your database populated. Your data is now on premise.  
