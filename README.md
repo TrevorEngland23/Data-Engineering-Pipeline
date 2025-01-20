@@ -9,7 +9,7 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 ## Table of Contents  
 
 - [Set Up (MAC)](#Setup)  
-- [Data Extraction](#dataingestion)  
+- [Data Extraction](#Extraction)  
 - [Data Transformation](#datatransformation)  
 - [Data Loading](#loaddata)  
 - [Dashboard (Tableau)](#tableau)  
@@ -83,7 +83,7 @@ This should be the entire set up for the rest of the project. In this phase, we'
 
 ---  
 
-## Data Extraction  
+## Extraction  
 
 
 
