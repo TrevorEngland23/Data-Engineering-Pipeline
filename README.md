@@ -138,9 +138,11 @@ az vm start --resource-group $RG --name $NAME
 
 ![screenshot](images/successfulpipeline.png)  
 
+12. To verify this, head to your storage account and click into the bronze container. you should see a parquet file in there with the title of your table name.  Now that we know this works, you can delete that file because instead of only getting 1 table, we want all the tables in the database to be copied over. So we will head back to Azure Data Factory for this.  
+
 ![screenshot](images/onpremtodatalake.png)  
 
-12. To verify this, head to your storage account and click into the bronze container. you should see a parquet file in there with the title of your table name.  Now that we know this works, you can delete that file because instead of only getting 1 table, we want all the tables in the database to be copied over. So we will head back to Azure Data Factory for this.  
+
 
 
 
