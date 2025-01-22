@@ -85,8 +85,55 @@ This should be the entire set up for the rest of the project. In this phase, we'
 
 ## Extraction  
 
+In this stage, we will be getting the data from on premise into the cloud. Start by:  
 
+1. In Azure Data Studio (or SSMS depending on what you're using), create a new query that creates a username and password for a user to the database.  
 
+```sql  
+CREATE LOGIN <username> WITH PASSWORD = '<password>'  
+CREATE USER <username> FOR LOGIN <user>;  
+```  
+
+2. Head to Azure Keyvault. Click on Role Based Access Control, Or "Access Policies" depending on how you configured your keyvault. You will know if you try to click on Access Policies and it says something like "This Keyvault is configured for RBAC". If you're using RBAC, select "Create a Role Assignment", search for "Key Vault Administrator" and assign the permissions to yourself. (Assuming you have owner access over your subscription, or you're a global admin). If you're using Access Policies, create a new access policy and assign yourself the permissions under the "Secrets" portion for Get, List, Read, Create, Update, Delete. Search for your alias, review and create. From here, you'll click on "Secrets" tab, and create a new secret. Name the secret something meaningful, like "sqlserverpassword" and copy/paste your password from the sql query into the value section. Create the secret.  
+   
+3. Navigate to Azure Data Factory, go into the workspace. Click on new pipeline and name the pipeline. Under "Activities", search for "Copy Data". Drag and drop the copy data activity into the window pane on the right.  
+   
+4. Take a look around at the settings. Configure it how you wish, but make sure to click on "new source dataset". From here, search "sql" and select SQL Server. From here you'll need to follow fill out required fields. Create new linked service and name it. Under Integration Runtimes, select "new integration runtime", then select Self Hosted Integration Runtime. You want to select this option because you're moving data from on premise to Azure. If you were moving data within azure, you could keep the runtime as AutoResolve.  
+
+5. There will be a link that you need to download for Express and 2 authentication keys that appear. This is where if you're following along with my steps on a MacBook, things are about to get a bit weird. When you try to download the express link, your MacBook will say that the application cannot be opened. This is because only Windows will support this. So what to do? You could use a different tool altogether to get your data into Azure, one that supports Linux and Windows. Or, you can create a Windows Virtual Machine, install the express application there, have the integrated runtime on your Windows VM to copy the data over. Although maybe not the most efficient way to solve the problem, it is good practice for creating resources and making configuration changes to connect components. So here's what I had to do, which may differ from what you need to do.  
+
+    A. Create a Windows VM. this can be done directly on your macbook with something like parallels, or you can use Azure.  
+    B. Modify your NSG rules to allow RDP connection inbound, and https outbound, and port 1433 outbound for the Docker container.  
+    C. Head back to ADF, click the express link and follow the installation guide.  
+    D. In my case, I had to login to my home internet router and create a port forwarding rule to map to my MacBooks private IP address over port 1433.  
+    E. You'll also need to install a Java Runtime Engine on your Windows VM for parsing the parqet files in a later step. DROP LINK This is what I used. Once you install this, you'll need to go into your Windows VM settings and create an environment variable called           "JAVA_HOME" and paste the full path to where the JRE was installed. Then, under that you'll need to create a new Path for the JRE. Again, after this, create a new path that references the BIN folder of the JRE.  
+
+   NOTE: If you choose this method, the Windows Machine must be running when you try to copy the data since this basically allows the pipeline to be connected to the Docker contianer. If your VM is not running, you won't be able to connect. With this, to save costs while you're not working on the project, be sure to stop the VM and delete your public IP address so you're not paying for it. To stop and deallocate a VM, Open CloudShell in the Azure portal. then run the following:  
+
+```bash  
+RG=<RESOURCEGROUP>  
+NAME=<WINDOWSVMNAME>  
+az account set --subscription <SUBSCRIPTIONID>  
+az vm deallocate --resource-group $RG --name $NAME  
+```  
+
+Then, whenever you come back to work on the project, search for "public ip" and create a new public ip. assign it to your Windows VM. Then run the above commands, except the last line should be:  
+```bash  
+az vm start --resource-group $RG --name $NAME  
+```  
+
+7. Once you've done the above, change the "Mandatory" field for encryption to "optional". This is to allow the traffic past any firewalls. In authentication, type in your username then select "Azure KeyVault". You'll create a new linked service.  At some point in this, there will be an option to assign a managed identity access to the keyvault. You'll want to assign the Data Factory Managed Identity the role of "Secrets Reader", or if access policy for "get" secret. Once you're done, select the subscription the keyvault is in, select the keyvault, then select the secret name that contains your users password.  
+
+8. Click on "Sink" and specify the file path for where the data should go. In our case, click the blue link, and select "bronze" from the dropdown.  
+
+9. Now, go back to Azure Data Studio and run the query:  
+   ```sql  
+   USE <databasename>  
+   GRANT SELECT ON <tablename> TO <username>;  
+   ```  
+10. Back in Azure Data Factory, Select "Test Connection". If your connection is validated with no errors, click on the icon in the window pane of "Copy Data" then click "Debug at the top"  
+11. You'll see a pipeline appear. If this succeeds, you will have successfully copied over the tablename that you specified in the query. In my example, I used "AdventureWorksLT2022.Address".  
+12. To verify this, head to your storage account and click into the bronze container. you should see a parquet file in there with the title of your table name.  Now that we know this works, you can delete that file because instead of only getting 1 table, we want all the tables in the database to be copied over. So we will head back to Azure Data Factory for this.  
 
 
 
