@@ -74,7 +74,7 @@ Things to note:
     - Mostly everything i've left at the defaults. Do you research on pricing, and please please please set a budget on your resource group to alert you if your resources somehow end up costing more money than you're willing to spend.  
 
 In the end, you should have something similar to this structure:  
-![screenshot](images/Screenshot%202025-01-20%20at%2012.20.31 PM.png)  
+![screenshot](images/resourcesexample.png)  
 ![screenshot](images/storageacct.png)  
 
 Finally, you'll want to install either PowerBI or Tableau. Since PowerBI requires Windows, I opted for Tableau. You can download Tableau for free [here](https://www.tableau.com/products/public/download?_gl=1*1qdgnz9*_ga*NTczODY5MTU2LjE3Mzc0MDM5MDI.*_ga_8YLN0SNXVS*MTczNzQwMzkwMC4xLjEuMTczNzQwMzk2NS4wLjAuMA..&_ga=2.233025950.1411837766.1737403902-573869156.1737403902)  
@@ -122,7 +122,9 @@ Then, whenever you come back to work on the project, search for "public ip" and 
 az vm start --resource-group $RG --name $NAME  
 ```  
 
-7. Once you've done the above, change the "Mandatory" field for encryption to "optional". This is to allow the traffic past any firewalls. In authentication, type in your username then select "Azure KeyVault". You'll create a new linked service.  At some point in this, there will be an option to assign a managed identity access to the keyvault. You'll want to assign the Data Factory Managed Identity the role of "Secrets Reader", or if access policy for "get" secret. Once you're done, select the subscription the keyvault is in, select the keyvault, then select the secret name that contains your users password.  
+7. Once you've done the above, change the "Mandatory" field for encryption to "optional". This is to allow the traffic past any firewalls. In authentication, type in your username then select "Azure KeyVault". You'll create a new linked service.  At some point in this, there will be an option to assign a managed identity access to the keyvault. You'll want to assign the Data Factory Managed Identity the role of "Secrets Reader", or if access policy for "get" secret. Once you're done, select the subscription the keyvault is in, select the keyvault, then select the secret name that contains your users password. In the end your Role Assignments should look something similar to this:  
+
+![screenshot](images/kvpermissionsexample.png)    
 
 8. Click on "Sink" and specify the file path for where the data should go. In our case, click the blue link, and select "bronze" from the dropdown.  
 
@@ -133,6 +135,11 @@ az vm start --resource-group $RG --name $NAME
    ```  
 10. Back in Azure Data Factory, Select "Test Connection". If your connection is validated with no errors, click on the icon in the window pane of "Copy Data" then click "Debug at the top"  
 11. You'll see a pipeline appear. If this succeeds, you will have successfully copied over the tablename that you specified in the query. In my example, I used "AdventureWorksLT2022.Address".  
+
+![screenshot](images/successfulpipeline.png)  
+
+![screenshot](images/onpremtodatalake.png)  
+
 12. To verify this, head to your storage account and click into the bronze container. you should see a parquet file in there with the title of your table name.  Now that we know this works, you can delete that file because instead of only getting 1 table, we want all the tables in the database to be copied over. So we will head back to Azure Data Factory for this.  
 
 
