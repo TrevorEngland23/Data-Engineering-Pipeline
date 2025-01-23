@@ -203,8 +203,8 @@ This allows us to dynamically get all of the tables in the database. Notice that
 
 16. After all are successful, verify the data and it's structure within the bronze container in the storage account.  
 
-![screenshot](images/populatealltables.png)  
 ![screenshot](images/properdirectory.png)  
+![screenshot](images/populatealltables.png)  
 ![screenshot](images/fileexamplepertable.png)  
 
 
