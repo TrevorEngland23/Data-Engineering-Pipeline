@@ -100,8 +100,9 @@ CREATE USER <username> FOR LOGIN <user>;
    
 4. Take a look around at the settings. Configure it how you wish, but make sure to click on "new source dataset". From here, search "sql" and select SQL Server. From here you'll need to follow fill out required fields. Create new linked service and name it. Under Integration Runtimes, select "new integration runtime", then select Self Hosted Integration Runtime. You want to select this option because you're moving data from on premise to Azure. If you were moving data within azure, you could keep the runtime as AutoResolve.  
 
-5. There will be a link that you need to download for Express and 2 authentication keys that appear. This is where if you're following along with my steps on a MacBook, things are about to get a bit weird. When you try to download the express link, your MacBook will say that the application cannot be opened. This is because only Windows will support this. So what to do? You could use a different tool altogether to get your data into Azure, one that supports Linux and Windows. Or, you can create a Windows Virtual Machine, install the express application there, have the integrated runtime on your Windows VM to copy the data over. Although maybe not the most efficient way to solve the problem, it is good practice for creating resources and making configuration changes to connect components. So here's what I had to do, which may differ from what you need to do.  
-
+5. There will be a link that you need to download for Express and 2 authentication keys that appear. This is where if you're following along with my steps on a MacBook, things are about to get a bit weird. When you try to download the express link, your MacBook will say that the application cannot be opened. This is because only Windows will support this. So what to do? You could use a different tool altogether to get your data into Azure, one that supports Linux and Windows. Or, you can create a Windows Virtual Machine, install the express application there, have the integrated runtime on your Windows VM to copy the data over. Although maybe not the most efficient way to solve the problem, it is good practice for creating resources and making configuration changes to connect components. So here's what I had to do, which may differ from what you need to do.
+   
+   #todo : create point to site vpn instead of opening the port in the router.
     A. Create a Windows VM. this can be done directly on your macbook with something like parallels, or you can use Azure.  
     B. Modify your NSG rules to allow RDP connection inbound, and https outbound, and port 1433 outbound for the Docker container.  
     C. Head back to ADF, click the express link and follow the installation guide.  
@@ -141,6 +142,63 @@ az vm start --resource-group $RG --name $NAME
 12. To verify this, head to your storage account and click into the bronze container. you should see a parquet file in there with the title of your table name.  Now that we know this works, you can delete that file because instead of only getting 1 table, we want all the tables in the database to be copied over. So we will head back to Azure Data Factory for this.  
 
 ![screenshot](images/onpremtodatalake.png)  
+
+### Data Ingestion Pt. 2  
+
+1. Navigate to Azure Data Factory. If you haven't already, select "publish all", then you can either delete or edit your current pipeline to copy data from ALL tables. In my case, I deleted the pipeline since making a new one was good practice, plus all the linked services were still created so it was only a matter of re-selecting them + adding the dynamic content in.  
+
+2. I deleted my pipeline, then clicked "new pipeline", renamed it as "copy_all_tables_from_onprem". From here, I searched "lookup" in the activities box, drag and drop into the window pane. Click settings, and edit the source dataset to be the SQL database.  Click "open" option, de-select the table (since we want multiple tables).  
+
+3. Go back a level, unselect the "first row only" option, and select query. In the query box, put the following query in:  
+```sql
+SELECT s.name AS SchemaName, t.name AS TableName
+FROM sys.tables t
+INNER JOIN sys.schemas s
+ON t_schema_id = s_schema_id
+WHERE s.name = 'SalesLT';
+```
+This is basically creating a view of the database for us to query instead of querying the actual database itslef later on.  
+
+4. Go back to Azure Data Studio, and run the following query:  
+```sql
+USE <DATBASENAME>;
+GRANT SELECT ON SCHEMA::SalesLT TO <USER>
+```
+
+This grants the user logged in access to all the tables in the database. Go back to Azure Data Factory and click debug. Make sure this succeeds and check the output. You should see all the tables populate to the left as well.  
+
+5. Search for the "ForEach" activity. drag and drop to the right of the Lookup activity. From here, select the "success" button on the Lookup activity and draw a line from Lookup to the ForEach box. This just indicates what the structure of the pipeline. If the LookUp is successful, then it should go to this step. Within the ForEach activity, you'll see a + sign, or you may even see the Copy Data activity directly. Make sure the Copy Data activity is put within the ForEach activity.  
+
+6. Select the dataset. Then select "query" again. Here, you'll want to select "add dynamic content" link. These queries are basically as if you're querying the database in Azure Data Studio, but you're doing it from Azure Data Factory and it will be ran upon running the pipeline. So here, you'll want to input the following:  
+
+```sql
+@{concat('SELECT * FROM ', item().SchemaName,'.',item().TableName)}
+```
+
+This allows us to dynamically get all of the tables in the database. Notice that earlier we set s.name as SchemaName and t.name as TableName, and here we reference those aliases.  
+
+7. Select "sink" then select the Parquet option that should still be there. Select open. Select Parameters. put in two parameters here: schemaname, tablename  
+
+8. Go back to sink. You should see the two parameters you just made. For the value of each, select "add dyamic content" and put the following for their respective values:  
+```sql
+@item().schemaname
+@item().tablename
+```
+
+10. Go back to sink and select open next to the parquet option. You'll see the file path. Select directory, add dynamic content:  
+```sql
+@{concat(dataset().schemaname, '/', dataset().tablename})
+```
+
+12. Select OK, then for the File section select add dynamic content:  
+```sql
+@{concat(dataset().tablename,'.parquet'})
+```  
+
+14. This should be the set up, from here you can publish all changes and trigger the pipeline. You can head watch the pipeline from the output tab, or you can go to monitor and select pipelines.  
+
+15. After all are successful, verify the data in your storage account.  
+
 
 
 
