@@ -167,9 +167,11 @@ GRANT SELECT ON SCHEMA::SalesLT TO <USER>
 
 This grants the user logged in access to all the tables in the database. Go back to Azure Data Factory and click debug. Make sure this succeeds and check the output. You should see all the tables populate to the left as well.  
 
-5. Search for the "ForEach" activity. drag and drop to the right of the Lookup activity. From here, select the "success" button on the Lookup activity and draw a line from Lookup to the ForEach box. This just indicates what the structure of the pipeline. If the LookUp is successful, then it should go to this step. Within the ForEach activity, you'll see a + sign, or you may even see the Copy Data activity directly. Make sure the Copy Data activity is put within the ForEach activity.  
+5. Search for the "ForEach" activity. drag and drop to the right of the Lookup activity. From here, select the "success" button on the Lookup activity and draw a line from Lookup to the ForEach box. This just indicates what the structure of the pipeline. If the LookUp is successful, then it should go to this step. Within the ForEach activity, you'll see a + sign, or you may even see the Copy Data activity directly. Make sure the Copy Data activity is put within the ForEach activity.
 
-6. Select the dataset. Then select "query" again. Here, you'll want to select "add dynamic content" link. These queries are basically as if you're querying the database in Azure Data Studio, but you're doing it from Azure Data Factory and it will be ran upon running the pipeline. So here, you'll want to input the following:  
+![screenshot](images/onsuccessdiagram.png)  
+
+7. Select the dataset. Then select "query" again. Here, you'll want to select "add dynamic content" link. These queries are basically as if you're querying the database in Azure Data Studio, but you're doing it from Azure Data Factory and it will be ran upon running the pipeline. So here, you'll want to input the following:  
 
 ```sql
 @{concat('SELECT * FROM ', item().SchemaName,'.',item().TableName)}
@@ -195,9 +197,15 @@ This allows us to dynamically get all of the tables in the database. Notice that
 @{concat(dataset().tablename,'.parquet'})
 ```  
 
-14. This should be the set up, from here you can publish all changes and trigger the pipeline. You can head watch the pipeline from the output tab, or you can go to monitor and select pipelines.  
+14. This should be the set up, from here you can publish all changes and trigger the pipeline. You can head watch the pipeline from the output tab, or you can go to monitor and select pipelines.
 
-15. After all are successful, verify the data in your storage account.  
+![screenshot](images/successfulpipelinerun.png)  
+
+16. After all are successful, verify the data and it's structure within the bronze container in the storage account.  
+
+![screenshot](images/populatealltables.png)  
+![screenshot](images/properdirectory.png)  
+![screenshot](images/fileexamplepertable.png)  
 
 
 
