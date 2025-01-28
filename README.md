@@ -252,7 +252,7 @@ You should have something like this once you're complete with the above steps
 
 6. From here, I'll include screenshots along with the code to copy, then below all of the screenshots I'll explain the steps.  
 
-*PART A*  
+**PART A**  
 ```python
 dbutils.fs.ls('mnt/bronze/SalesLT/')
 ```  
@@ -267,7 +267,7 @@ df = spark.read.format('parquet').load('/mnt/bronze/SalesLT/Address/Address.parq
 
 ![screenshot](images/bronzetosilver1.png)  
 
-*PART B*  
+**PART B**  
 
 ![screenshot](images/bronzetosilver2.png)  
 
@@ -275,7 +275,7 @@ df = spark.read.format('parquet').load('/mnt/bronze/SalesLT/Address/Address.parq
 
 ![screenshot](images/bronzetosilver2v2.png)  
 
-*PART C*  
+**PART C**  
 
 ```python
 display(df)
@@ -294,7 +294,7 @@ display(df)
 
 ![screenshot](images/bronzetosilver3.png)  
 
-*PART D*  
+**PART D**  
 
 ```python
 table_name = []
