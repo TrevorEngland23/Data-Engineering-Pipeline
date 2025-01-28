@@ -321,5 +321,5 @@ for i in table_name:
     output_path = '/mnt/silver/SalesLT/' + i + '/'
     df.write.format('delta').mode('overwrite').save(output_path)
     ```  
-
+    
     ![screenshot](images/bronzetosilver4.png)  
