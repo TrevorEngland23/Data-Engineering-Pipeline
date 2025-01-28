@@ -10,7 +10,7 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 
 - [Set Up (MAC)](#Setup)  
 - [Data Extraction](#Extraction)  
-- [Data Transformation](#datatransformation)  
+- [Data Transformation](#Transformation)  
 - [Data Loading](#loaddata)  
 - [Dashboard (Tableau)](#tableau)  
 
@@ -104,7 +104,7 @@ CREATE USER <username> FOR LOGIN <user>;
    
    #todo : create point to site vpn instead of opening the port in the router.
     A. Create a Windows VM. this can be done directly on your macbook with something like parallels, or you can use Azure.  
-    B. Modify your NSG rules to allow RDP connection inbound, and https outbound, and port 1433 outbound for the Docker container.  
+    B. Modify your NSG rules to allow RDP connection inbound, and https outbound, and port 1433 outbound for the Docker container.  **NOTE**: This is not the most secure method. At the end of the project, I might create a P2S VPN Gateway to demonstrate how that looks, but keep in mind if you follow that route you will be paying for the VPN and it's associated public IP's that it requires.    
     C. Head back to ADF, click the express link and follow the installation guide.  
     D. In my case, I had to login to my home internet router and create a port forwarding rule to map to my MacBooks private IP address over port 1433.  
     E. You'll also need to install a Java Runtime Engine on your Windows VM for parsing the parqet files in a later step. DROP LINK This is what I used. Once you install this, you'll need to go into your Windows VM settings and create an environment variable called           "JAVA_HOME" and paste the full path to where the JRE was installed. Then, under that you'll need to create a new Path for the JRE. Again, after this, create a new path that references the BIN folder of the JRE.  
@@ -189,12 +189,12 @@ This allows us to dynamically get all of the tables in the database. Notice that
 
 10. Go back to sink and select open next to the parquet option. You'll see the file path. Select directory, add dynamic content:  
 ```sql
-@{concat(dataset().schemaname, '/', dataset().tablename})
+@{concat(dataset().schemaname, '/', dataset().tablename)}
 ```
 
 12. Select OK, then for the File section select add dynamic content:  
 ```sql
-@{concat(dataset().tablename,'.parquet'})
+@{concat(dataset().tablename,'.parquet')}
 ```  
 
 14. This should be the set up, from here you can publish all changes and trigger the pipeline. You can head watch the pipeline from the output tab, or you can go to monitor and select pipelines.
@@ -207,11 +207,119 @@ This allows us to dynamically get all of the tables in the database. Notice that
 ![screenshot](images/populatealltables.png)  
 ![screenshot](images/fileexamplepertable.png)  
 
+# Transformation  
 
+1. In Azure Portal, go to your databricks resource. You'll want to upgrade to premium to use a feature for later, then click launch workspace.  
 
+2. Once you're here click on "Compute" to create a cluster. Go for a standard general purpose cluster. I picked the DSV_2. Click advanced settings, and click "Enable credential passthrough".  
 
+3. While your cluster is creating, click New -> Notebook.  
 
+4. From here, we need to create a mount point to the data lake in the storage account. **NOTE**: The code from this comes from Luke J Byrne's youtube channel. You can also find the code [here](https://learn.microsoft.com/en-us/azure/databricks/archive/credential-passthrough/adls-passthrough)    
+```python
+configs = {
+    "fs.azure.account.auth.type": "CustomAccessToken",
+    "fs.azure.account.custom.token.provider.class": spark.conf.get("spark.databricks.passthrough.adls.gen2.tokenProviderClassName")
+}
 
+dbutils.fs.mount(
+    source = "abfss://bronze@<yourstorageaccountname>.dfs.core.windows.net/",
+    mount_point = "/mnt/bronze",
+    extra_configs = configs
+)
+```  
 
+Likewise, you'll want to create mount points for the silver and gold containers in that storage account as well.  
+```python
+dbutils.fs.mount(
+source = "abfss://silver@<yourstorageaccountname>.dfs.core.windows.net/",
+mount_point = "mnt/silver",
+extra_configs = configs
+)
 
+dbutils.fs.mount(
+    source = "abfss://gold@<yourstorageaccountname>.dfs.core.windows.net/",
+    mount_point = "/mnt/gold",
+    extra_configs = configs
+)
+```  
 
+You should have something like this once you're complete with the above steps  
+
+![screenshot](images/databricksmountpoint.png)  
+
+5. Next, you'll want to create another notebook just as you did for the storage mount notebook. We now need to code the transformation from bronze to silver. 
+
+6. From here, I'll include screenshots along with the code to copy, then below all of the screenshots I'll explain the steps.  
+
+*PART A*  
+```python
+dbutils.fs.ls('mnt/bronze/SalesLT/')
+```  
+
+```python
+dbutils.fs.ls('mnt/silver/')
+```  
+
+```python
+df = spark.read.format('parquet').load('/mnt/bronze/SalesLT/Address/Address.parquet)
+```  
+
+![screenshot](images/bronzetosilver1.png)  
+
+*PART B*  
+
+![screenshot](images/bronzetosilver2.png)  
+
+*Note:* the date format before the transformation  
+
+![screenshot](images/bronzetosilver2v2.png)  
+
+*PART C*  
+
+```python
+display(df)
+```  
+
+```python
+from pyspark.sql.functions import from_utc_timestamp, date_format
+from pyspark.sql.types import TimestampType
+
+df = df.withColumn("ModifiedDate", date_format(from_utc_timestamp(df['ModifiedDate'].cast(TimestampType()), "UTC"), "yyyy-MM-dd"))
+```  
+
+```python
+display(df)
+```
+
+![screenshot](images/bronzetosilver3.png)  
+
+*PART D*  
+
+```python
+table_name = []
+
+for i in dbutils.fs.ls('mnt/bronze/SalesLT/'):
+    table_name.append(i.name.split('/'[0]))
+
+table_name
+```  
+
+```python
+from pyspark.sql.functions import from_utc_timestamp, date_format
+from pyspark.sql.types import TimestampType
+
+for i in table_name:
+    path = '/mnt/bronze/SalesLT/' + i + '/' + '.parquet'
+    df = spark.read.format('parquet').load(path)
+    column = df.columns
+
+    for col in column:
+        if "Date" in col or "date" in col:
+            df = df.withColumn(col, date_format(from_utc_timestamp(df[col].cast(TimestampType()), "UTC"), "yyyy-MM-dd"))
+
+    output_path = '/mnt/silver/SalesLT/' + i + '/'
+    df.write.format('delta').mode('overwrite').save(output_path)
+    ```  
+
+    ![screenshot](images/bronzetosilver4.png)  
