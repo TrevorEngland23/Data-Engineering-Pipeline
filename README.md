@@ -250,9 +250,8 @@ You should have something like this once you're complete with the above steps
 
 5. Next, you'll want to create another notebook just as you did for the storage mount notebook. We now need to code the transformation from bronze to silver. 
 
-6. From here, I'll include screenshots along with the code to copy, then below all of the screenshots I'll explain the steps.  
+**PART A** - Lists all the files in the bronze/SalesLT/ path in your storage account. Then, you'll do the same for silver, which should return an empty array. There shouldn't be anything in your silver container at this point. After this, you'll load in the Address.parquet file into a data frame so that you can see the table when you call the data frame. None of these step are vital for success in this project, but it does help you see exactly what is going on.  
 
-**PART A**  
 ```python
 dbutils.fs.ls('mnt/bronze/SalesLT/')
 ```  
@@ -262,12 +261,16 @@ dbutils.fs.ls('mnt/silver/')
 ```  
 
 ```python
-df = spark.read.format('parquet').load('/mnt/bronze/SalesLT/Address/Address.parquet)
+df = spark.read.format('parquet').load('/mnt/bronze/SalesLT/Address/Address.parquet')
 ```  
 
 ![screenshot](images/bronzetosilver1.png)  
 
-**PART B**  
+**PART B** - Here, all you're doing is displaying the data frame you specified above, which is the contents of the address.parquet file.  
+
+```python
+display(df)
+```  
 
 ![screenshot](images/bronzetosilver2.png)  
 
@@ -275,11 +278,7 @@ df = spark.read.format('parquet').load('/mnt/bronze/SalesLT/Address/Address.parq
 
 ![screenshot](images/bronzetosilver2v2.png)  
 
-**PART C**  
-
-```python
-display(df)
-```  
+**PART C** - Here is the bread and butter of "bronze" objective. The main transformation in this stage revolves around changing the date format to be more human readable, and easier to interact with when querying against this dataset. Then, you'll display the data frame and verify that the *ModifiedDate* column has indeed changed formats.  
 
 ```python
 from pyspark.sql.functions import from_utc_timestamp, date_format
@@ -294,7 +293,7 @@ display(df)
 
 ![screenshot](images/bronzetosilver3.png)  
 
-**PART D**  
+**PART D** - So now that we've successfully changed the date format for the Address table, we now want to do it for all tables. Technically, you could (and probably would) omit the above steps, but for learning purposes and practice I included them. So first you'll create an empty list for the table names. Loop through all the tables within the bronze/SalesLT directory, and append them to the list. Now that you have your list of table names, you'll write a nested for loop. The outer loop will iterate through every table, dynamically changing the path for each iteration, loading that parquet file into the dataframe, and then grabbing all the columns within that data frame. The inner for loop will iterate through all the columns in the data frame, searching for the word "Date" or "date" (Since we know only one column includes this word, this approach is fine), then once you have that column, you apply the same logic as in Part C to transform the date format. From here our transformation is complete, so we want to put this transformed data into the next level (silver container) which we already have mounted.  
 
 ```python
 table_name = []
