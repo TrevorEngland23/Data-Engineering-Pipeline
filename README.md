@@ -11,9 +11,9 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 - [Set Up (MAC)](#Setup)  
 - [Data Extraction](#Extraction)  
 - [Data Transformation](#Transformation)  
-    [Bronze](#Bronze)
-    [Silver](#Silver)
-    [Gold](#Gold)
+    [Bronze](#Bronze)  
+    [Silver](#Silver)  
+    [Gold](#Gold)  
 - [Data Loading](#Load)  
 - [Dashboard (Tableau)](#Dashboard)  
 
@@ -279,7 +279,7 @@ display(df)
 
 ![screenshot](images/bronzetosilver2.png)  
 
-*Note:* the date format before the transformation  
+**Note:** the date format before the transformation  
 
 ![screenshot](images/bronzetosilver2v2.png)  
 
