@@ -462,14 +462,17 @@ display(df)
 4. Copy the access token and go to Azure Key Vault. Create a new secret with a meaningful name, and add your access token as the value. 
 
 5. Go back to Azure Data Factory, select the key vault option under authentication, then select the secret you just created.  
+
 ![screenshot](images/settingsexample.png)  
 
 6. Click the notebooks tab, and select browse. Find your notebook for "Bronze -> Silver". Mine was under users/<myusername>,Bronze -> Silver.  
 
-7. Now, do this same process to add another notebook for "Silver -> Gold. In the end your diagram should look like this.  
+7. Now, do this same process to add another notebook for "Silver -> Gold. In the end your diagram should look like this. 
+
 ![screenshot](images/diagramwithtransformation.png)  
 
 8. Once you have the diagram like this, trigger your pipeline and watch it run under the "monitor" tab.  The result of a successful pipeline will look similar to this.  
+
 ![screenshot](images/pipelinerunwithtransformation.png)  
 
 
