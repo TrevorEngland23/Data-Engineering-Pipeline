@@ -13,7 +13,6 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 - [Data Transformation](#Transformation)  
    &nbsp;&nbsp;&nbsp;&nbsp; [Bronze](#Bronze)
    &nbsp;&nbsp;|&nbsp;&nbsp; [Silver](#Silver)
-   &nbsp;&nbsp;|&nbsp;&nbsp; [Gold](#Gold)
 - [Data Loading](#Load)  
 - [Dashboard (Tableau)](#Dashboard)  
 
@@ -451,6 +450,27 @@ display(df)
 ```  
 
 ![screenshot](images/silvertogold5.png)  
+
+### <ins>Add notebooks to Pipeline</ins>  
+
+1. Keep Databricks open, but open a new tab and go to your Azure Data Factory workspace. Click on your pipeline, and search under "Activities" for "Notebook". Drag and drop the notebook icon to the right of the ForEach activity and connect a "on success" arrow to it.  
+
+2. Rename the notebook activity then select "Azure Databricks" and create a new linked service. Select "AutoResolveIntegrationRuntime" since this data is already in Azure moving to another resource in Azure. Select your subscription, your Databricks workspace, choose "existing interactive cluster", and select "Access Token" for authentication.  
+
+3. From here, go back to Databricks and select your profile at the top right corner. Select "Settings" then "Developer". Here you'll see an option for an access token; follow the steps and generate the token. 
+
+4. Copy the access token and go to Azure Key Vault. Create a new secret with a meaningful name, and add your access token as the value. 
+
+5. Go back to Azure Data Factory, select the key vault option under authentication, then select the secret you just created.  
+![screenshot](images/settingsexample.png)  
+
+6. Click the notebooks tab, and select browse. Find your notebook for "Bronze -> Silver". Mine was under users/<myusername>,Bronze -> Silver.  
+
+7. Now, do this same process to add another notebook for "Silver -> Gold. In the end your diagram should look like this.  
+![screenshot](images/diagramwithtransformation.png)  
+
+8. Once you have the diagram like this, trigger your pipeline and watch it run under the "monitor" tab.  The result of a successful pipeline will look similar to this.  
+![screenshot](images/pipelinerunwithtransformation.png)  
 
 
 
