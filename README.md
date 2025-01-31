@@ -465,7 +465,7 @@ display(df)
 
 ![screenshot](images/settingsexample.png)  
 
-6. Click the notebooks tab, and select browse. Find your notebook for "Bronze -> Silver". Mine was under users/<myusername>,Bronze -> Silver.  
+6. Click the notebooks tab, and select browse. Find your notebook for "Bronze -> Silver". Mine was under users/myusername/Bronze -> Silver.  
 
 7. Now, do this same process to add another notebook for "Silver -> Gold. In the end your diagram should look like this. 
 
