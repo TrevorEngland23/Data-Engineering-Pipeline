@@ -11,7 +11,7 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 - [Set Up (MAC)](#Setup)  
 - [Data Extraction](#Extraction)  
 - [Data Transformation](#Transformation)  
-   &nbsp;&nbsp;|&nbsp;&nbsp; [Bronze](#Bronze)
+   &nbsp;&nbsp;&nbsp;&nbsp; [Bronze](#Bronze)
    &nbsp;&nbsp;|&nbsp;&nbsp; [Silver](#Silver)
    &nbsp;&nbsp;|&nbsp;&nbsp; [Gold](#Gold)
 - [Data Loading](#Load)  
@@ -253,7 +253,7 @@ You should have something like this once you're complete with the above steps
 
 5. Next, you'll want to create another notebook just as you did for the storage mount notebook. We now need to code the transformation from bronze to silver. 
 
-### Bronze  
+### <ins>Bronze</ins>  
 
 **PART A** - Lists all the files in the bronze/SalesLT/ path in your storage account. Then, you'll do the same for silver, which should return an empty array. There shouldn't be anything in your silver container at this point. After this, you'll load in the Address.parquet file into a data frame so that you can see the table when you call the data frame. None of these step are vital for success in this project, but it does help you see exactly what is going on.  
 
@@ -328,11 +328,11 @@ for i in table_name:
 
 ![screenshot](images/bronzetosilver4.png)  
 
-### Silver  
+### <ins>Silver</ins>  
 
 Now that the data has gone through the transformation in the Bronze container and is pushed into the Silver container, we can do further transformations here. Create a new notepad, just as you did for the Bronze Container. I named mine Bronze -> Silver.  Again, I'll break this into parts with the code, screenshots, and explanation of what is happening. Additionally, I'll include my exported databricks notebook.  
 
-**Part A**  
+**Part A** - Pretty much the same as before, start by listing out the files in the silver container under the directory *SalesLT*. Then, list out the files in the gold container (which there should not be any yet). After, we load data from the Address table in to the dataframe. We use 'delta' because that is how the data was stored coming from Bronze into Silver. Delta is built on top of parquet and has additional features. Parquet is typically used for raw data ingestion, whereas delta is used for semi-clean data that's traveling since it does have versioning capabilities and eases time traveling.   
 
 ```python  
 dbutils.fs.ls('mnt/silver/SalesLT/')
@@ -353,7 +353,7 @@ display(df)
 ![screenshot](images/silvertogold1.png)  
 ![screenshot](images/silvertogold1.2.png)  
 
-**Part B** -  
+**Part B** - Here, we are creating a function to minimize the re-use of code in later steps. In the Bronze section, we had repeateded code which is a bad practice.  
 
 ```python
 from pyspark.sql.functions import col
@@ -398,7 +398,7 @@ def rename_columns_to_snake_case(df):
 
 ![screenshot](images/silvertogold2.png)  
 
-**PART C** -  
+**PART C** - Here, we are calling the function we created above, passing in the data frame we created in part A. Essentially, the function runs on that data frame, and then reassigns the variable "df" to the output of the function (which is the new and improved data frame).  
 
 ```python
 df = rename_columns_to_snake_case(df)
@@ -410,7 +410,7 @@ display(df)
 
 ![screenshot](images/silvertogold3.png)  
 
-**Part D** -  
+**Part D** - Here, we create a temporary table name variable (temporary in the sense of we aren't actually using this variable beyond this point, but it still technically exists in memory). The purpose of this was to see the format of the files.  After we know the format, we can manipulate the name of the table in the manner we want, which is consistent with how we did it in Bronze -> Silver.  
 
 ```python
 table_name_temp = []
@@ -432,7 +432,7 @@ table_name
 
 ![screenshot](images/silvertogold4.png)  
 
-**Part E** -  
+**Part E** - Here, we iterate through the table name list we made above, so that the path in the gold container is consistent with the paths of other containers. We print out the path as well so we can make sure it looks good. We create a new data frame by passing in the paths above, which is iterating through the table names. So each table is being passed into the function, which is being assigned to the dataframe. Then we are specifying the output path to be the gold conatiner under the SalesLT directory, and writing each data frame (each transformed table), to the gold container under SalesLT.
 
 ```python
 for name in table_name:
