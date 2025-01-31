@@ -11,9 +11,9 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 - [Set Up (MAC)](#Setup)  
 - [Data Extraction](#Extraction)  
 - [Data Transformation](#Transformation)  
-   &nbsp;&nbsp;&nbsp;&nbsp; [Bronze](#Bronze)
-   &nbsp;&nbsp;&nbsp;&nbsp; [Silver](#Silver)
-   &nbsp;&nbsp;&nbsp;&nbsp; [Gold](#Gold)
+   &nbsp;&nbsp;|&nbsp;&nbsp; [Bronze](#Bronze)
+   &nbsp;&nbsp;|&nbsp;&nbsp; [Silver](#Silver)
+   &nbsp;&nbsp;|&nbsp;&nbsp; [Gold](#Gold)
 - [Data Loading](#Load)  
 - [Dashboard (Tableau)](#Dashboard)  
 
