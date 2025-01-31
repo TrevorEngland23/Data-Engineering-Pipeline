@@ -11,8 +11,11 @@ I got this inspiration from curiously watching an Azure Data Engineering tutoria
 - [Set Up (MAC)](#Setup)  
 - [Data Extraction](#Extraction)  
 - [Data Transformation](#Transformation)  
-- [Data Loading](#loaddata)  
-- [Dashboard (Tableau)](#tableau)  
+    [Bronze](#Bronze)
+    [Silver](#Silver)
+    [Gold](#Gold)
+- [Data Loading](#Load)  
+- [Dashboard (Tableau)](#Dashboard)  
 
 ---
 
@@ -250,6 +253,8 @@ You should have something like this once you're complete with the above steps
 
 5. Next, you'll want to create another notebook just as you did for the storage mount notebook. We now need to code the transformation from bronze to silver. 
 
+### Bronze  
+
 **PART A** - Lists all the files in the bronze/SalesLT/ path in your storage account. Then, you'll do the same for silver, which should return an empty array. There shouldn't be anything in your silver container at this point. After this, you'll load in the Address.parquet file into a data frame so that you can see the table when you call the data frame. None of these step are vital for success in this project, but it does help you see exactly what is going on.  
 
 ```python
@@ -322,3 +327,130 @@ for i in table_name:
 ```  
 
 ![screenshot](images/bronzetosilver4.png)  
+
+### Silver  
+
+Now that the data has gone through the transformation in the Bronze container and is pushed into the Silver container, we can do further transformations here. Create a new notepad, just as you did for the Bronze Container. I named mine Bronze -> Silver.  Again, I'll break this into parts with the code, screenshots, and explanation of what is happening. Additionally, I'll include my exported databricks notebook.  
+
+**Part A**  
+
+```python  
+dbutils.fs.ls('mnt/silver/SalesLT/')
+```  
+
+```python
+dbutils.fs.ls('mnt/gold/')
+```  
+
+```python
+df = spark.read.format('delta').load('/mnt/silver/SalesLT/Address/')
+```  
+
+```python
+display(df)
+```  
+
+![screenshot](images/silvertogold1.png)  
+![screenshot](images/silvertogold1.2.png)  
+
+**Part B** -  
+
+```python
+from pyspark.sql.functions import col
+
+def rename_columns_to_snake_case(df):
+
+    # Get the list of column names
+    column_names = df.columns
+
+    # Dictionary to hold old and new mappings
+    rename_map = {}
+
+    for old_col_name in column_names:
+        # Convert the column names to snake_case
+        new_col_name = "".join([
+            "_" + char.lower() if (
+                # Check if the current character is uppercase
+                char.isupper()
+                # Make sure it's not the first character
+                and idx > 0
+                # Make sure the previous character is not uppercase
+                and not old_col_name[idx - 1].isupper()
+            # Convert character to lowercase
+            ) else char.lower()
+            # Remove any leading underscores
+            for idx, char in enumerate(old_col_name)
+        ]).lstrip("_")
+
+        # Avoid renaming to an existing column name
+        if new_col_name in rename_map.values():
+            raise ValueError(f"Duplicate column name was found after renaming: '{new_col_name}'")
+        
+        # Map the old column name to the new column name
+        rename_map[old_col_name] = new_col_name
+    
+    # Rename the columns using the mapping
+    for old_col_name, new_col_name in rename_map.items():
+        df = df.withColumnRenamed(old_col_name, new_col_name)
+
+    return df
+```  
+
+![screenshot](images/silvertogold2.png)  
+
+**PART C** -  
+
+```python
+df = rename_columns_to_snake_case(df)
+```  
+
+```python
+display(df)
+```  
+
+![screenshot](images/silvertogold3.png)  
+
+**Part D** -  
+
+```python
+table_name_temp = []
+
+for i in dbutils.fs.ls('mnt/silver/SalesLT'):
+    table_name_temp.append(i)
+
+table_name_temp
+```  
+
+```python
+table_name = []
+
+for i in dbutils.fs.ls('mnt/silver/SalesLT'):
+    table_name.append(i.name.split('/')[0])
+
+table_name
+```  
+
+![screenshot](images/silvertogold4.png)  
+
+**Part E** -  
+
+```python
+for name in table_name:
+    path = '/mnt/silver/SalesLT/' + name
+    print(path)
+    df = spark.read.format('delta').load(path)
+
+    df = rename_columns_to_snake_case(df)
+
+    output_path = '/mnt/gold/SalesLT/' + name + '/'
+    df.write.format('delta').mode('overwrite').save(output_path)
+```  
+
+```python
+display(df)
+```  
+
+![screenshot](images/silvertogold5.png)  
+
+
+
