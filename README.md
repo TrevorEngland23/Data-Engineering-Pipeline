@@ -1,7 +1,7 @@
 # Azure Project : Trevor England
 
 ### About the Project:  
-I got this inspiration from curiously watching an Azure Data Engineering tutorial. While I was watching the tutorial, I took notes on what the guy did and decided to give my own project a try while referring to my notes. This project aims to migrate data from an on premise SQL Server into Azure Data Factory to be stored in a data lake. From there, the data will undergo transformations (Bronze, Silver, Gold), and ultimately be displayed in a dashboard at the end of the project. The tutorial I watched, the guy was using a Windows Machine so he used SSMS to interact with the on premise SQL Server. I am running on a Mac, so I have a few additional steps to make this work.  
+I got this inspiration from curiously watching an Azure Data Engineering tutorial by Luke J Byrne on YouTube (He got this project from mr.ktalkstech). While I was watching the tutorial, I took notes on what Luke did and decided to give my own project a try while referring to my notes. This project aims to migrate data from an on premise SQL Server into Azure Data Factory to be stored in a data lake. From there, the data will undergo transformations (Bronze, Silver, Gold) via Databricks, and ultimately be displayed in a dashboard at the end of the project. The tutorial I watched, Luke was using a Windows machine so he used SSMS to interact with the on premise SQL Server. I am running on a Mac, so I have a few additional steps to make this work. This guide will help MAC USERS be able to complete this project. The goal of this project was to get my hands dirty in the world of building ETL pipelines, and to create something I can refer to for a project I want to build in the future (super excited about it).  
 
 
 ---  
