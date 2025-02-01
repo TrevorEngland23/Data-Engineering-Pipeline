@@ -475,5 +475,60 @@ display(df)
 
 ![screenshot](images/pipelinerunwithtransformation.png)  
 
+# Load
+
+1. Go to Synapse Analytics workspace and open a workspace. Choose the database icon on the left, click + and add a SQL database, choose serverless and give it a name.  
+
+2. On the left, click on Linked, then open your linked service shown. This should open up the data lake for you to browse. Choose the gold container, right click on the address table, sql script, select top 100 rows, and choose delta format.  
+
+3. Here, if you run the auto-generated sql it will return the top 100 rows from that table. Modify this scrip so that it is...  
+
+```sql
+CREATE VIEW SalesLT_AddressView AS
+Select TOP 100 *
+FROM OPENROWSET(
+    BULK 'https://<yourstorageaccountnname.dfs.core.windows.net/gold/SalesLT/Address/',
+    FORMAT = 'DELTA'
+) AS [result]
+```  
+and click run. This will not return anything, it just creates the view to be the output of this query. To verify if the view was created...  
+
+```sql
+SELECT * FROM SalesLT_AddressView
+```  
+
+4. We could just create whatever view we want for each table in our database, but if we had thousands of tables here that would be very inefficient. Instead, we want to create a pipeline that will create these views for us, which we can do from data factory, but we can also use synapse (synapse is built on top of data factory, but has additional features. Everything we've done in this project could probably have been done in Synapse, including the databricks notebooks section.)  
+
+5. Click develop, +, new sql script. Paste the following:  
+
+```sql 
+USE Gold_DB
+GO 
+CREATE OR ALTER PROC CreateSQLServerlessView_gold @ViewName nvarchar(100)
+AS
+BEGIN
+    DECLARE @statement VARCHAR(MAX)
+    SET @statement = N'CREATE OR ALTER VIEW ' + @ViewName + ' AS
+        SELECT *
+        FROM OPENROWSET(
+            BULK ''https://<yourstorageaccountname>.dfs.core.windows.net/gold/SalesLT/' + @ViewName + '/'',
+            FORMAT = ''DELTA''
+        ) AS [result]'
+
+    EXEC (@statement)
+END 
+GO
+```  
+
+Once you've done, publish your changes.  
+
+6. We now want to create the pipeline. To do this we need to create a linked service to connect the serverless database.  
+
+7. Click on the Manage icon on the left -> linked services -> create. Give it a name, AutoResolveIntegrationRuntime. For the connection/auth part, I had problems with selecting the subscription, my synapse analytics, and finding my Gold_DB. only the master DB was showing up, so instead I clicked on enter manually and found my serverless endpoint from Azure portal (Go to Synapse, and on the left look for "Properties". You'll find the Serverless endpoint there), then for db name I manually typed in "Gold_DB" or whatever you named the database. I selected system-assigned managed identity, and then tested my connection and it worked. Once your validation passes, publish your changes.  
+
+8. Now we can use this linked service to access our data from the pipeline. On the left, click the "Integrate" icon, and select "New Pipeline"  
+
+
+
 
 
