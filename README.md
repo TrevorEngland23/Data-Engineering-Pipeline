@@ -106,12 +106,89 @@ CREATE USER <username> FOR LOGIN <user>;
    
    #todo : create point to site vpn instead of opening the port in the router.
     A. Create a Windows VM. this can be done directly on your macbook with something like parallels, or you can use Azure.  
-    B. Modify your NSG rules to allow RDP connection inbound, and https outbound, and port 1433 outbound for the Docker container.  **NOTE**: This is not the most secure method. At the end of the project, I might create a P2S VPN Gateway to demonstrate how that looks, but keep in mind if you follow that route you will be paying for the VPN and it's associated public IP's that it requires.    
+    B. Modify your NSG rules to allow RDP connection inbound, and https outbound, and port 1433 outbound for the Docker container.    
     C. Head back to ADF, click the express link and follow the installation guide.  
-    D. In my case, I had to login to my home internet router and create a port forwarding rule to map to my MacBooks private IP address over port 1433.  
+    D. I created a P2S VPN connection for this, while I'll go into detail in just a minute.  
     E. You'll also need to install a Java Runtime Engine on your Windows VM for parsing the parqet files in a later step. DROP LINK This is what I used. Once you install this, you'll need to go into your Windows VM settings and create an environment variable called           "JAVA_HOME" and paste the full path to where the JRE was installed. Then, under that you'll need to create a new Path for the JRE. Again, after this, create a new path that references the BIN folder of the JRE.  
 
    NOTE: If you choose this method, the Windows Machine must be running when you try to copy the data since this basically allows the pipeline to be connected to the Docker contianer. If your VM is not running, you won't be able to connect. With this, to save costs while you're not working on the project, be sure to stop the VM and delete your public IP address so you're not paying for it. To stop and deallocate a VM, Open CloudShell in the Azure portal. then run the following:  
+
+   *Setting up the P2S Connection*  
+
+   Keep in mind, this is pricey to keep running. Basic SKU is less than 30 dollars a month, but you'll need to create it via CLI and you're limited as to what tunnel types you can use. Since I used my Mac Native VPN client, I needed IKEv2.  This took me a couple of days to get working and figure it all out, so hopefully I'm not explaining this clear as mud.  
+
+   1. Go to Azure Portal and create a new subnet in your Virtual network with the name "GatewaySubnet", ensuring that the subnet doesn't overlap with the default subnet. For example, my default subnet is 10.0.0.0/24, my gateway subnet is 10.0.1.0/27.  
+
+   2. Create a Virtual Network Gateway. You'll need to create this in the same resource group as your Virtual network and assign a public ip address. Once you deploy this, it takes 20-30 minutes to create. I used VPNGW1 sku, which runs about 130 USD a month if you keep it running. I will not keep it running :D  
+
+   3. Once deployed, select "Point-to-site configuration". Specify an address pool (private IP space that doesn't overlap with your gateway subnet). Select IKEv2 if you're using Mac native VPN client, or if you have a third party vpn client use whatever tunnel type it supports.  Use Azure certificate for authentication. From here, you'll need to search for "Keychain" and open. At the top, click "keychain access -> certificate assistant -> create a new certificate authority". You'll want this to be type VPN Server, give it a meaningful name, and it's a self signed root certificate. Create this certificate. It should appear in your keychain. To the left, click the arrow and underneath it should have an associated private key. Right click this key and select "Create a certificate with ca name". Select, this and name this something meaningful, selecting VPN Client as the type since this is going to be what makes the client certificate.  
+
+   4. Right click on your root certificate, and select "get info". There will be a "trust" section, and select "always trust". Highlight the key underneath the root certificate, and export it as a .p12,  assigning an export password to it that you'll remember. I recommend making a directory for this as well named "certificates" and saving the file to this directory.  
+
+   5. Before you proceed, you'll want to clone this github repository as it'll come in handy.  
+
+   ```bash
+   git clone https://github.com/chrisvugrinec/azure-vpn-point2site
+   ```  
+
+    He basically made scripts that walk you through the steps of how this should work. The problem I ran into is that I'm using openssl version 3.4, and some of the encryption methods needed by keychain are no longer supported by openssl.  To get around this, i installed openssl version 1.1.  
+
+    ```bash
+    brew install openssl@1.1
+    ```  
+
+    I didn't export this into my path, but I was able to find where it resides in my filesystem and use it by directly accessing it. For me the path was /opt/homebrew/opt/openssl@1.1/bin/openssl  
+
+   6. You can start with the second step as we already exported the private key from keychain.  Step 2 is 
+   ```bash
+   /opt/homebrew/opt/openssl@1.1/bin/openssl pkcs12 -in <rootca>.p12 -nocerts -out <rootca>.key
+   ```  
+
+   step 3  
+
+   ```bash
+   openssl req -new -key <rootca>.key -out <rootca>.csr
+   ```  
+
+   step 4  
+   ```bash
+   openssl x509 -req -days 3650 -in <rootca>.csr -signkey <rootca>.key -out <rootca>.crt
+   ```
+   From here, you'll want to put this rootca.crt file in the same directory as the "mac" directory in the github repository from earlier. Run the ./5_removeSpaces.sh script and give the name of your rootca.crt file. This removes the spaces from your public key inside, so that when you upload this to Azure portal there are no extra spaces, otherwise it won't work. (trust me, I spent way too long scratching my head here).  This will give you a new file with a naming convention like rootca.crt-nospaces.crt. This is the file you'll want to open later. For now, we continue though.  
+
+   7. Open the rootca.crt file 
+   ```bash 
+   open <rootca>.crt 
+   ```
+
+   This will import the file into keychain, signed by the private key of your root certificate.  
+
+   ![screenshot](images/certificatesinkeychain.png)  
+
+   8. Now, open the nospaces file and copy the content up until the = sign. 
+```bash
+cat <rootca>.crt-nospaces.crt
+```  
+
+Ensure you have every character, no more no less, and head back to Azure portal. Paste this in the "Public certificate data" section, then assign a name to the certificate.  Click "Save" at the top and wait for the changes to reflect.  
+
+9. Download the VPN Client. unzip the folder and you're mainly intereseted in the "Generic" folder if you're using IKEv2 with MAC native vpn client. You'll want to use cat to open the VpnSettings.xml file.  Then, open "System Preferences" and search for VPN. Near the bottom you'll see a button to click and then click "Add VPN Configuration", and select IKEv2.  Here, you'll name your connection, then for Server Address and Remote ID, you'll grab that from the xml file. There should be a tag for Server that starts with "azuregateway". Copy that address and paste into both sections. Your Local ID is going to be whatever you named your client certificate in Keychain. Select certificate for authentication, and browse for your client certificate (Probably only your Root and client will show).  From here, select create and try to connect. This should prompt you for a password, and select "Always allow" as we will automate this later.  I'll link a good youtube video that helped me out with creating this.  [Link](https://www.youtube.com/watch?v=cEbIvDrWnno)  
+
+![screenshot](images/vpnconnected.png)  
+
+Once you've done this, go to your Windows Machine in Azure portal and downlaod the RDP file. Connect via RDP, and verify that you are able to ping your Macbook and SQL Server in the Docker container. To find your Macbook's private IP address while connected to the VPN...  
+
+```bash
+ifconfig
+```
+
+You're looking for ipsec0 interface and you should see an address assigned that falls within the address range you specified for your vpn.  Take that address, and from your Windows Machine, open powerhsell.  
+
+![screenshot](images/pinglocalmachine.png)  
+
+![screenshot](images/pingsqlserver.png)  
+
+![screenshot](images/telnettosqlserver.png)  
 
 ```bash  
 RG=<RESOURCEGROUP>  
@@ -520,13 +597,47 @@ END
 GO
 ```  
 
-Once you've done, publish your changes.  
+Once you've done, publish your changes and run this.  
 
 6. We now want to create the pipeline. To do this we need to create a linked service to connect the serverless database.  
 
 7. Click on the Manage icon on the left -> linked services -> create. Give it a name, AutoResolveIntegrationRuntime. For the connection/auth part, I had problems with selecting the subscription, my synapse analytics, and finding my Gold_DB. only the master DB was showing up, so instead I clicked on enter manually and found my serverless endpoint from Azure portal (Go to Synapse, and on the left look for "Properties". You'll find the Serverless endpoint there), then for db name I manually typed in "Gold_DB" or whatever you named the database. I selected system-assigned managed identity, and then tested my connection and it worked. Once your validation passes, publish your changes.  
 
 8. Now we can use this linked service to access our data from the pipeline. On the left, click the "Integrate" icon, and select "New Pipeline"  
+
+9. Search for "Get Metadata" activity. Give a name. Under settings, select new, then search for data lake. Select the option. Under Linked Service, select the linked service we just created. Then for filepath, click browse and select gold/SalesLT. Select "Binary" as the file type. Then under field list, you'll want to select "Get Child Items" which allows you to get the data under the gold/SalesLT/ path. Click debug and verify the output.  
+
+10. Create a "ForEach" activity. Draw the "on success" arrow from the Get Metadata to the ForEach. Under settings, add dynamic conent to the items portion and select the "Get Child Items". From here, add an activity inside the ForEach by clicking the pencil icon and search for "Stored Procedure" in the activity section. Your diagram should look like this:  
+
+![screenshot](images/synapsediagram.png)  
+
+11. Under settings, select the linked service connected to your database, select your view for stored procedure name, click "new" for parameters and add the name as "ViewName", Type as "String", and Value as "@item().name"  
+
+12. Publish all your changes, and trigger the pipeline.  This should run the query for creating a view on each table in the gold/SalesLT file path (for every table)  
+
+![screenshot](images/synapsepipeline.png)  
+
+![screenshot](images/gold_db_views.png)  
+
+13. Now that we have everything set up that we need, I would like to make this so that the pipeline is triggered automatically when it detects data changes in any of the tables, to ensure that the data I have on premise is the same data that I have in Azure.  To do this, I'll be running some queries on my on prem database to enable change tracking, then I'll create a script that runs via a cron job 
+
+    Some things you'll want to consider if you follow my steps for the automation piece. You'll need azcli installed with the databricks extension set. You'll need to create a service principal that can fetch it's own credentials for logging in to Azure and creating resources (You'll need to assign this sp the proper RBAC, I'll explain more on this). You'll need to enable change tracking on your sql server on premise (for the database and all tables within the database). You'll need mssql tools as well, I'll walk over it all just reminding myself here for later. Reminder to always clean up resources when you're done, as this can be very costly if you forget to delete compute resources.
+
+    ALTER TABLE SalesLT.Address ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.Customer ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.CustomerAddress ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.Product ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.ProductCategory ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.ProductDescription ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.ProductModel ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.ProductModelProductDescription ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesOrderDetail ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+ALTER TABLE SalesLT.SalesOrderHeader ENABLE CHANGE_TRACKING WITH (TRACK_COLUMNS_UPDATED = ON);
+
+
+ALTER DATABASE AdventureWorksLT2022
+SET CHANGE_TRACKING = ON
+(AUTO_CLEANUP = ON, CHANGE_RETENTION = 2 DAYS);
 
 
 
