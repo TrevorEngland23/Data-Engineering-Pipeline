@@ -756,7 +756,7 @@ SELECT name, is_change_tracking_on
 FROM sys.databases 
 WHERE name = '<DATABASE_NAME>';
 ```  
-Additionally, to automate the script in here, you'll want to schedule a cron job. Say you wanted it to run every night at 8PM  
+Additionally, to automate the script in here, you'll want to schedule a cron job. Say you wanted it to run every night at 8PM. **NOTE:** Do not actually do this. As stated earlier, this project can be very costly if you forget to delete resources. My recommendation is to see it through, but once you have a working copy delete your VPN. If you need it later, keep the certificates in a safe location and use them to create another one. This is just an example of what you COULD do to automate this script running. Additionally, there are multiple ways to automate all of this. I chose a long, single script. There are plenty of disadvantages to this, but the advantage to me is that you have one centralized place to view logs and see if anything failed, and if something did fail, you can identify what that was on the spot. There are much easier ways to do this though, one being set an auto-start feature on the Windows VM at a specified time, then schedule your ADF job to run at a specified time and have a script locally to connect your VPN and create resources. This eases some of the scripting, however to me it just seems chaotic for trying to identiy points of failure.  
 
 ```bash
 chmod +x /path/to/automate_pipelines.sh
