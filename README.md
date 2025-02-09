@@ -763,4 +763,8 @@ WHERE name = '<DATABASE_NAME>';
 [az synapse commands](https://learn.microsoft.com/en-us/cli/azure/synapse/pipeline-run?view=azure-cli-latest#az-synapse-pipeline-run-show)  
 [Databricks secret scope](https://docs.databricks.com/en/security/secrets/index.html)  
 [Integration Runtime](https://learn.microsoft.com/en-us/azure/data-factory/create-self-hosted-integration-runtime?tabs=data-factory)  
-[P2S VPN](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-certificate-gateway)
+[P2S VPN](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-certificate-gateway)  
+
+# Load  
+
+In progress...
