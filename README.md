@@ -765,6 +765,6 @@ WHERE name = '<DATABASE_NAME>';
 [Integration Runtime](https://learn.microsoft.com/en-us/azure/data-factory/create-self-hosted-integration-runtime?tabs=data-factory)  
 [P2S VPN](https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-certificate-gateway)  
 
-# Load  
+# Dashboard  
 
 In progress...
