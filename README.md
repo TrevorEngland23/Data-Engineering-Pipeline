@@ -755,7 +755,18 @@ To ensure change tracking is enabled
 SELECT name, is_change_tracking_on 
 FROM sys.databases 
 WHERE name = '<DATABASE_NAME>';
-```
+```  
+Additionally, to automate the script in here, you'll want to schedule a cron job. Say you wanted it to run every night at 8PM  
+
+```bash
+chmod +x /path/to/automate_pipelines.sh
+crontab -e
+```  
+
+Then at the bottom of the file add...  
+```bash
+0 20 * * * /path/to/automate_pipelines.sh >& /path/to/script_log.txt
+```  
 
 # Resources
 [Connecting to ADLS GEN2](https://learn.microsoft.com/en-us/azure/databricks/connect/storage/tutorial-azure-storage)  
