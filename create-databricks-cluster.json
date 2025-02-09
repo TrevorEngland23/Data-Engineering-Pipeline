@@ -1,0 +1,11 @@
+{
+  "cluster_name": "DataEngProj Cluster",
+  "spark_version": "15.4.x-scala2.12",
+  "node_type_id": "Standard_D3_v2",
+  "num_workers": 1,
+  "autotermination_minutes": 30,
+  "enable_elastic_disk": true,
+  "data_security_mode": "NONE",
+  "access_mode": "CUSTOMER_MANAGED"
+}
+

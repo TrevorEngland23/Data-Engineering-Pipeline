@@ -1,0 +1,189 @@
+[
+  {
+    "cloudName": "AzureCloud",
+    "homeTenantId": "0a8877e6-76af-4741-9e59-de22e58d215a",
+    "id": "ade656e8-6c4a-456f-b489-7cc8d55c0a9c",
+    "isDefault": true,
+    "managedByTenants": [
+      {
+        "tenantId": "2f4a9838-26b7-47ee-be60-ccc1fdec5953"
+      }
+    ],
+    "name": "AZ-104 Practice Labs",
+    "state": "Enabled",
+    "tenantId": "0a8877e6-76af-4741-9e59-de22e58d215a",
+    "user": {
+      "name": "cd1d83d1-1ef7-450c-8653-dcf7c02ceccf",
+      "type": "servicePrincipal"
+    }
+  }
+]
+
+Connecting to VPN...
+VPN connected.
+
+Count value: 3
+
+Changes detected in table Address! Spinning up WindowsVM, please standby...
+VM Status: PowerState/running
+WARNING: It's recommended to create with `--sku standard`. Please be aware that Basic option will be removed in the future.
+{
+  "publicIp": {
+    "etag": "W/\"55216fe2-042e-472c-b2ff-3155ced60f1c\"",
+    "id": "/subscriptions/ade656e8-6c4a-456f-b489-7cc8d55c0a9c/resourceGroups/DataEngRG1/providers/Microsoft.Network/publicIPAddresses/WindowsVM-pip1",
+    "idleTimeoutInMinutes": 4,
+    "ipAddress": "57.154.185.213",
+    "ipTags": [],
+    "location": "westus",
+    "name": "WindowsVM-pip1",
+    "provisioningState": "Succeeded",
+    "publicIPAddressVersion": "IPv4",
+    "publicIPAllocationMethod": "Static",
+    "resourceGroup": "DataEngRG1",
+    "resourceGuid": "4d6151f0-9ffc-4db2-affc-6a142d23d14f",
+    "sku": {
+      "name": "Basic",
+      "tier": "Regional"
+    },
+    "type": "Microsoft.Network/publicIPAddresses"
+  }
+}
+
+Creating Public IP Address for WindowsVM...
+WindowsVM public IP: 57.154.185.213
+
+Attaching Public IP to NIC...
+{
+  "etag": "W/\"06ae8a57-8478-4a40-851c-86b028cb853f\"",
+  "id": "/subscriptions/ade656e8-6c4a-456f-b489-7cc8d55c0a9c/resourceGroups/DataEngRG1/providers/Microsoft.Network/networkInterfaces/windowsvm306/ipConfigurations/ipconfig1",
+  "name": "ipconfig1",
+  "primary": true,
+  "privateIPAddress": "10.0.0.4",
+  "privateIPAddressVersion": "IPv4",
+  "privateIPAllocationMethod": "Dynamic",
+  "provisioningState": "Succeeded",
+  "publicIPAddress": {
+    "id": "/subscriptions/ade656e8-6c4a-456f-b489-7cc8d55c0a9c/resourceGroups/DataEngRG1/providers/Microsoft.Network/publicIPAddresses/WindowsVM-pip1",
+    "resourceGroup": "DataEngRG1"
+  },
+  "resourceGroup": "DataEngRG1",
+  "subnet": {
+    "id": "/subscriptions/ade656e8-6c4a-456f-b489-7cc8d55c0a9c/resourceGroups/DataEngRG1/providers/Microsoft.Network/virtualNetworks/WindowsVM-vnet/subnets/default",
+    "resourceGroup": "DataEngRG1"
+  },
+  "type": "Microsoft.Network/networkInterfaces/ipConfigurations"
+}
+WindowsVM Private IP: 10.0.0.4
+
+Creating Databricks Compute Resource...
+
+Databricks URL: adb-2043935050356827.7.azuredatabricks.net
+[
+  {
+    "cloudName": "AzureCloud",
+    "homeTenantId": "0a8877e6-76af-4741-9e59-de22e58d215a",
+    "id": "ade656e8-6c4a-456f-b489-7cc8d55c0a9c",
+    "isDefault": true,
+    "managedByTenants": [
+      {
+        "tenantId": "2f4a9838-26b7-47ee-be60-ccc1fdec5953"
+      }
+    ],
+    "name": "AZ-104 Practice Labs",
+    "state": "Enabled",
+    "tenantId": "0a8877e6-76af-4741-9e59-de22e58d215a",
+    "user": {
+      "name": "cd1d83d1-1ef7-450c-8653-dcf7c02ceccf",
+      "type": "servicePrincipal"
+    }
+  }
+]
+
+Updated Key Vault Secret Version: DataEngSP-Databricks-AccessToken
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   298  100    36  100   262     44    327 --:--:-- --:--:-- --:--:--   372100   298  100    36  100   262     44    326 --:--:-- --:--:-- --:--:--   372
+{"cluster_id":"0209-034949-7yxujvh"}  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  1043  100  1043    0     0   3194      0 --:--:-- --:--:-- --:--:--  3239
+
+Cluster State: PENDING
+
+Cluster State: PENDING
+
+Cluster State: PENDING
+
+Cluster State: PENDING
+
+Cluster State: PENDING
+
+Cluster State: PENDING
+
+Cluster State: PENDING
+
+Cluster State: RUNNING
+{"object_id":"/clusters/0209-034949-7yxujvh","object_type":"cluster","access_control_list":[{"service_principal_name":"cd1d83d1-1ef7-450c-8653-dcf7c02ceccf","display_name":"Automation_Pipelines_SP","all_permissions":[{"permission_level":"CAN_MANAGE","inherited":false}]},{"group_name":"admins","all_permissions":[{"permission_level":"CAN_MANAGE","inherited":true,"inherited_from_object":["/clusters/"]}]}]}Triggering Azure Data Factory Pipeline...
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: InProgress
+ADF Pipeline Status: Succeeded
+ADF Pipeline completed successfully!
+
+Triggering Synapse Analytics Pipeline...
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: InProgress
+Synapse Pipeline Status: Succeeded
+
+Synapse Pipeline completed successfully!
+
+Cleaning up Resources...
+
+Deleting Databricks cluster 0209-034949-7yxujvh...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    41  100     2  100    39      3     65 --:--:-- --:--:-- --:--:--    68
+{}  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100    41  100     2  100    39      3     77 --:--:-- --:--:-- --:--:--    81
+{}  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100     2  100     2    0     0      6      0 --:--:-- --:--:-- --:--:--     6
+
+Cluster 0209-034949-7yxujvh successfully deleted.
+
+Deleting IP: WindowsVM-pip1
+Public IP WindowsVM-pip1 successfully deleted.
+
+WindowsVM is in Status: Stopped(deallocated)
+
+Cleanup Complete.
+
+VPN disconnected.
+
+Script completed.
