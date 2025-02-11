@@ -170,8 +170,6 @@ You're looking for ipsec0 interface and you should see an address assigned that 
 
 ![screenshot](images/pinglocalmachine.png)  
 
-![screenshot](images/pingsqlserver.png)  
-
 ![screenshot](images/telnettosqlserver.png)  
 
 This should be the entire set up for the rest of the project. In this phase, we've pulled an image to run SQL Server in a Docker container, connected Azure Data Studio to our SQL Server, restored a sample database, provisioned all the resources within the Azure Portal that we will use for the rest of the project, and set up a Point-To-Site VPN connection in Azure using Self-Signed certificate authentication.   
